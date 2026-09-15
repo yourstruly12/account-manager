@@ -1,0 +1,238 @@
+Account Manager  Transaction Processing Pseudocode
+Transaction Decision Engine
+START
+
+SET accounts
+SET transactionHistory
+
+FUNCTION processTransaction(userAccount, transactionType, amount, recipientAccount)
+
+    SET transactionApproved = FALSE
+    SET transactionBlocked = FALSE
+
+    // 1. Validate transaction request
+
+    IF userAccount does not exist THEN
+        DISPLAY "Account does not exist"
+        RETURN "REJECTED"
+    END IF
+
+    IF amount <= 0 THEN
+        DISPLAY "Invalid transaction amount"
+        RETURN "REJECTED"
+    END IF
+
+
+    // 2. Validate transfer recipient
+
+    IF transactionType = "TRANSFER" THEN
+
+        IF recipientAccount does not exist THEN
+            DISPLAY "Recipient account does not exist"
+            RETURN "REJECTED"
+        END IF
+
+        IF userAccount = recipientAccount THEN
+            DISPLAY "Cannot transfer to the same account"
+            RETURN "REJECTED"
+        END IF
+
+    END IF
+
+
+    // 3. Check rapid withdrawals
+
+    IF transactionType = "WITHDRAWAL" THEN
+
+        SET currentTime = GET CURRENT TIME
+        SET withdrawalCount = 0
+
+        FOR EACH transaction IN transactionHistory
+
+            IF transaction.account = userAccount
+               AND transaction.type = "WITHDRAWAL"
+               AND transaction.time >= currentTime - 10 seconds THEN
+
+                INCREMENT withdrawalCount
+
+            END IF
+
+        END FOR
+
+        IF withdrawalCount > 3 THEN
+            DISPLAY "Transaction blocked: too many withdrawals"
+            SET transactionBlocked = TRUE
+            RETURN "BLOCKED"
+        END IF
+
+    END IF
+
+
+    // 4. Check available balance
+
+    IF transactionType = "WITHDRAWAL"
+       OR transactionType = "TRANSFER" THEN
+
+        IF amount > userAccount.balance THEN
+            DISPLAY "Transaction rejected: insufficient funds"
+            RETURN "REJECTED"
+        END IF
+
+    END IF
+
+
+    // 5. Calculate average transaction amount
+
+    SET totalAmount = 0
+    SET transactionCount = 0
+
+    FOR EACH transaction IN transactionHistory
+
+        IF transaction.account = userAccount THEN
+
+            totalAmount = totalAmount + transaction.amount
+            INCREMENT transactionCount
+
+        END IF
+
+    END FOR
+
+
+    IF transactionCount > 0 THEN
+
+        SET averageTransactionAmount =
+            totalAmount / transactionCount
+
+    ELSE
+
+        SET averageTransactionAmount = 0
+
+    END IF
+
+
+    // 6. Check for unusual spending spike
+
+    IF averageTransactionAmount > 0 THEN
+
+        SET suspiciousThreshold =
+            averageTransactionAmount * 5
+
+        IF amount >= suspiciousThreshold THEN
+
+            DISPLAY "Transaction blocked: suspicious amount"
+            SET transactionBlocked = TRUE
+            RETURN "BLOCKED"
+
+        END IF
+
+    END IF
+
+
+    // 7. Approve transaction
+
+    SET transactionApproved = TRUE
+
+
+    // 8. Execute approved transaction
+
+    IF transactionApproved = TRUE
+       AND transactionBlocked = FALSE THEN
+
+        IF transactionType = "DEPOSIT" THEN
+
+            userAccount.balance =
+                userAccount.balance + amount
+
+        ELSE IF transactionType = "WITHDRAWAL" THEN
+
+            userAccount.balance =
+                userAccount.balance - amount
+
+        ELSE IF transactionType = "TRANSFER" THEN
+
+            userAccount.balance =
+                userAccount.balance - amount
+
+            recipientAccount.balance =
+                recipientAccount.balance + amount
+
+        END IF
+
+
+        // 9. Record successful transaction
+
+        CREATE newTransaction
+
+        SET newTransaction.account = userAccount
+        SET newTransaction.type = transactionType
+        SET newTransaction.amount = amount
+        SET newTransaction.time = GET CURRENT TIME
+
+        ADD newTransaction TO transactionHistory
+
+        DISPLAY "Transaction approved"
+
+        RETURN "APPROVED"
+
+    END IF
+
+END FUNCTION
+
+
+// Main transaction loop
+
+WHILE system is running
+
+    DISPLAY "1. Deposit"
+    DISPLAY "2. Withdraw"
+    DISPLAY "3. Transfer"
+    DISPLAY "4. Exit"
+
+    GET userChoice
+
+    IF userChoice = 1 THEN
+
+        SET transactionType = "DEPOSIT"
+
+    ELSE IF userChoice = 2 THEN
+
+        SET transactionType = "WITHDRAWAL"
+
+    ELSE IF userChoice = 3 THEN
+
+        SET transactionType = "TRANSFER"
+
+    ELSE IF userChoice = 4 THEN
+
+        DISPLAY "System shutting down"
+        BREAK
+
+    ELSE
+
+        DISPLAY "Invalid option"
+        CONTINUE
+
+    END IF
+
+
+    GET userAccount
+    GET amount
+
+    IF transactionType = "TRANSFER" THEN
+        GET recipientAccount
+    END IF
+
+
+    SET result =
+        processTransaction(
+            userAccount,
+            transactionType,
+            amount,
+            recipientAccount
+        )
+
+    DISPLAY result
+
+END WHILE
+
+END
