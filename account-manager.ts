@@ -158,6 +158,16 @@ function displayAccount(accountName: string): void {
         return;
     }
 
+    // Get an account by name.
+function getAccount(accountName: string): Account | null {
+
+    if (!accounts[accountName]) {
+        return null;
+    }
+
+    return accounts[accountName];
+}
+
     console.log(
         `${accountName} balance: R${accounts[accountName].balance}`
     );
@@ -167,5 +177,6 @@ function displayAccount(accountName: string): void {
 export {
     accounts,
     processTransaction,
-    displayAccount
+    displayAccount,
+    getAccount
 };
