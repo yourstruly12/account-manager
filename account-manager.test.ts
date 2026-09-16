@@ -1,6 +1,7 @@
 import {
     accounts,
-    processTransaction
+    processTransaction,
+     getAccount
 } from "./account-manager";
 
 // Reset the accounts before each test.
@@ -228,6 +229,19 @@ result = processTransaction(
 console.log(result);
 
 if (result === "REJECTED: Invalid transaction type") {
+    console.log("PASS");
+} else {
+    console.log("FAIL");
+}
+
+// Test 11: Get account
+resetAccounts();
+
+console.log("\nTest 11: Get account");
+
+const account = getAccount("Alice");
+
+if (account !== null && account.balance === 1000) {
     console.log("PASS");
 } else {
     console.log("FAIL");
